@@ -61,15 +61,26 @@ def parse_ports(spec: str):
 
 # ---------- Scanner core ----------
 def scan_port_once(target_ip: str, port: int, timeout: float = 0.8) -> bool:
-    """Return True if port is open (TCP connect), False otherwise."""
+    """Return True if port is open (TCP connect_ex returns 0), False otherwise.
+       ### CHANGED: uses socket.connect_ex() instead of socket.connect() + exceptions.
+    """
+    sock = None
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(timeout)
-        sock.connect((target_ip, port))
-        sock.close()
-        return True
+        # connect_ex returns 0 on success, otherwise an errno-style code
+        rc = sock.connect_ex((target_ip, port))
+        return rc == 0
     except Exception:
+        # In the rare case setting up the socket or connect_ex throws,
+        # consider the port closed.
         return False
+    finally:
+        if sock is not None:
+            try:
+                sock.close()
+            except Exception:
+                pass
 
 def try_get_service(port: int):
     try:
