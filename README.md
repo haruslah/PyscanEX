@@ -1,4 +1,4 @@
-# PyscanEX — Documentation
+# PyscanEX
 
 ---
 
