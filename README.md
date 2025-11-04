@@ -128,39 +128,9 @@ ip,port,status,service
 
 ---
 
-## Safety, ethics, and legality
-
-* **Important:** Scanning systems you do not own or have explicit permission to test is frequently illegal and/or violates acceptable use or network policies. Always obtain permission before scanning third-party networks.
-* Use this tool in controlled lab environments or on targets where you have authorization.
-
----
-
-## Common modifications / extension ideas
-
-* Add rate-limiting or delays to avoid triggering IDS/IPS.
-* Add an asynchronous (asyncio) backend instead of threads for extremely large scans.
-* Add banner grabbing for open ports (connect -> recv) to more precisely identify services.
-* Add IPv6 support (currently IPv4-only via `AF_INET`).
-* Add retries for transient failures.
-
----
-
 ## Limitations
 
 * IPv4-only.
 * Basic service identification (relies on `getservbyport()` which maps well-known ports only).
 * No built-in parallelism control by CPU affinity or process pools; uses threads only.
 
----
-
-## License
-
-Use as you wish, but remember the legal and ethical note above.
-
----
-
-If you want, I can also:
-
-* produce a one-page quick reference (cheat-sheet) for the UI prompts,
-* convert the script into a simple CLI with arguments instead of interactive prompts,
-* or add an example `systemd` service file to run periodic scans in a lab environment.
