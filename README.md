@@ -30,7 +30,7 @@ No third‑party packages required.
 2. Script resolves the hostname (if `host`) or expands the prefix to `.1`–`.254` (if `net`).
 3. User chooses scan type (1–4). The script builds a list of ports to test.
 4. The scanner submits tasks to a `ThreadPoolExecutor` where each task runs `scan_port_once()` which calls `socket.connect_ex((ip, port))` with a small timeout.
-5. Results are yielded from `scan_targets()` and printed. Open ports are highlighted and collected. Optionally results are saved to CSV.
+5. Results are yielded from `scan_ip_range()` and printed. Open ports are highlighted and collected. Optionally results are saved to CSV.
 
 ---
 
@@ -93,7 +93,7 @@ Enter CSV filename (e.g. results.csv): myscan.csv
 * Normalizes to the first three octets and returns `.1` through `.254` as a list of IP strings.
 * Raises `ValueError` for invalid prefixes.
 
-### `scan_targets(ips, ports, timeout=0.8, max_workers=200, show_progress=True)`
+### `scan_ip_range(ips, ports, timeout=0.8, max_workers=200, show_progress=True)`
 
 * Orchestrates concurrent scanning across many IPs and ports.
 * Uses `ThreadPoolExecutor` and yields `(ip, port, is_open)` tuples as tasks complete.
