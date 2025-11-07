@@ -5,9 +5,6 @@ Interactive TCP port scanner with:
  - Option to scan a single host or a /24 network
  - CSV export prompt
 
-This version adds explanatory comments for each block and key line so a lecturer
-(or beginner) can follow the logic. Comments show intent, inputs/outputs, and
-reasoning behind decisions (timeouts, threading, error handling).
 """
 
 import socket
@@ -262,7 +259,7 @@ def main():
     print("  1) Default: TCP port 80")
     print("  2) Common ports (typical services)")
     print("  3) Custom ports (e.g. 22,80,8000-8010)")
-    print("  4) All ports (1-65535) -- heavy!")
+    print("  4) All ports (1-65535)")
     choice = input("Your choice [1-4]: ").strip()
 
     if choice == "1":
@@ -282,7 +279,7 @@ def main():
         timeout = 1.0
     elif choice == "4":
         # warn user: scanning all ports is resource- and time-intensive
-        confirm = input(f"{RED}Scan all 65535 TCP ports on each host? This is very heavy. Proceed? (y/N): {RESET}").strip().lower()
+        confirm = input(f"{RED}Scan all 65535 TCP ports on each host? This is very heavy. {YELLOW}Proceed? (y/N): {RESET}").strip().lower()
         if confirm != "y":
             print("Cancelled.")
             return
