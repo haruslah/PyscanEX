@@ -31,18 +31,23 @@ YELLOW = CSI + "33m"
 RED = CSI + "31m"
 CYAN = CSI + "36m"
 
-def title(text): print(f"{BOLD}{CYAN}=== {text} ==={RESET}")
+def title(text): print(f"{BOLD}{YELLOW}==={RESET} {text} {YELLOW}==={RESET}")
 def info(text): print(f"{YELLOW}[i]{RESET} {text}")
 def success(text): print(f"{GREEN}[open]{RESET} {text}")
 def fail(text): print(f"{RED}[closed]{RESET} {text}")
 
 # ---------- Port parsing ----------
+
+# This function parses a port specification string into a list of ports.
+# Example input: "22,80,8000-8010"
 def parse_ports(spec: str):
     ports = set()
+    # Split by commas and process each part
     for part in spec.split(","):
         part = part.strip()
         if not part:
             continue
+        # Handle ranges
         if "-" in part:
             a, b = part.split("-", 1)
             a, b = int(a), int(b)
@@ -50,6 +55,7 @@ def parse_ports(spec: str):
                 raise ValueError(f"Invalid range: {part}")
             ports.update(range(a, b + 1))
         else:
+            # Handle single port
             p = int(part)
             if p < 1 or p > 65535:
                 raise ValueError(f"Port out of range: {p}")
@@ -58,18 +64,22 @@ def parse_ports(spec: str):
 
 # ---------- Core port scanner ----------
 def scan_port_once(target_ip: str, port: int, timeout: float = 0.8) -> bool:
+    # This funcion scans a single TCP port on the target IP address.
     # Return True if TCP port is open.
     sock = None
     try:
+        # Create a TCP socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(timeout)
         rc = sock.connect_ex((target_ip, port))
+        # If rc is 0, the port is open
         return rc == 0
     except Exception:
         return False
     finally:
         if sock:
             try:
+                # Close the socket
                 sock.close()
             except Exception:
                 pass
@@ -77,6 +87,7 @@ def scan_port_once(target_ip: str, port: int, timeout: float = 0.8) -> bool:
 def try_get_service(port: int):
     # Return service name for a given TCP port.
     try:
+        # Use socket library to get service name
         return socket.getservbyport(port, 'tcp')
     except Exception:
         return COMMON_PORT_NAMES.get(port, "")
@@ -92,21 +103,25 @@ def scan_ip_range(ips, ports, timeout=0.4, show_progress=True):
     scanned = 0
     last_percent = -1
 
+    # Iterate over all IPs and ports
     for ip in ips:
         for p in ports:
             try:
+                # Scan the port
                 is_open = scan_port_once(ip, p, timeout)
             except Exception:
+                # On error, assume port is closed
                 is_open = False
 
             scanned += 1
+            # Show progress if enabled
             if show_progress and total > 20:
                 percent = int(scanned / total * 100)
                 # print progress every 5%
                 if percent != last_percent and percent % 5 == 0:
                     info(f"Progress: {percent}% ({scanned}/{total})")
                     last_percent = percent
-
+            
             yield ip, p, is_open
 
 # ---------- Target expansion ----------
@@ -114,9 +129,12 @@ def expand_targets(spec: str):
     # Return a list of host IPs from a single address or CIDR.
     s = spec.strip()
     parts = s.rstrip('.').split('.')
+    
+    # Handle incomplete IPs like "192.168.1" as /24 networks
     if len(parts) == 3 and all(p.isdigit() for p in parts):
         s = s.rstrip('.') + '.0/24'
     try:
+        # Check if it's a single IP or a network
         if '/' not in s:
             ip = ipaddress.ip_address(s)
             return [str(ip)]
@@ -138,6 +156,7 @@ COMMON_PORT_NAMES = {
 
 # ---------- CSV export ----------
 def export_to_csv(rows, filename):
+    # Export scan results to a CSV file.
     with open(filename, 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=['ip', 'hostname', 'port', 'status', 'service'])
         writer.writeheader()
@@ -185,7 +204,7 @@ def main():
         ports = parse_ports(spec)
         timeout = 1.0
     elif choice == "4":
-        confirm = input(f"{RED}Scan all 65535 ports? Heavy! Continue? (y/N): {RESET}").lower()
+        confirm = input(f"{RED}Scan all 65535 ports? {YELLOW}(y/N): {RESET}").lower()
         if confirm != "y": return
         ports, timeout = list(range(1,65536)), 0.35
     else:
@@ -199,11 +218,13 @@ def main():
     info(f"Starting scan: {len(ips)} host(s) × {len(ports)} port(s)")
     start = time.time()
 
+    # This will hold all results
     results, open_records, seen = [], [], set()
     hostname_cache = {}
 
     total_tasks = len(ips) * len(ports)
 
+    # This performs the actual scanning
     for ip, port, is_open in scan_ip_range(ips, ports, timeout=timeout):
         svc = try_get_service(port)
         status = "open" if is_open else "closed"
@@ -239,6 +260,7 @@ def main():
     title("Scan summary")
     if open_records:
         info(f"Found {len(open_records)} open ports:")
+        # Sort and display open ports
         for r in sorted(open_records, key=lambda x: (x['ip'], x['port'])):
             success(f"{r['ip']} ({r['hostname']}):{r['port']} ({r['service']})")
     else:
@@ -250,5 +272,6 @@ def main():
         sorted_rows = sorted(results, key=lambda r: (0 if r['status']=="open" else 1, r['ip'], int(r['port'])))
         export_to_csv(sorted_rows, csv_name)
 
+# ---------- Entry point ----------
 if __name__ == "__main__":
     main()
