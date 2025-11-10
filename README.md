@@ -12,7 +12,6 @@
   - **Common ports** (typical service ports)
   - **Custom lists / ranges**
   - **All ports** (1–65535) — with explicit warning
-- Concurrent scanning using a thread pool for better performance
 - Optional CSV export of results (`ip,port,status,service`)
 
 The scanner uses `socket.connect_ex()` to test TCP ports; a return code of `0` indicates an open port.
@@ -34,7 +33,7 @@ No third-party packages required.
 1. User chooses mode: `host` (single hostname/IP) or `net` (CIDR/network prefix).
 2. Script resolves the hostname (if `host`) or expands the prefix into usable hosts (CIDR — e.g., `.1`–`.254` for `/24`).
 3. User chooses scan type (1–4). The script builds a list of ports to test.
-4. The scanner submits tasks to a `ThreadPoolExecutor`. Each task runs `scan_port_once()` which calls `socket.connect_ex((ip, port))` with a small timeout.
+4. `scan_ip_range()` runs `scan_port_once()` which calls `socket.connect_ex((ip, port))` with a small timeout.
 5. `scan_ip_range()` yields results as tasks complete. Open ports are highlighted and collected; optionally results are saved to CSV.
 
 ---
